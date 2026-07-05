@@ -23,7 +23,19 @@ class RiwayatStatusResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Select::make('pesanan_id')
+                    ->relationship('pesanan', 'id')
+                    ->required(),
+                Forms\Components\Select::make('user_id')
+                    ->relationship('user', 'name')
+                    ->default(null),
+                Forms\Components\TextInput::make('status_sebelumnya'),
+                Forms\Components\TextInput::make('status_baru')
+                    ->required(),
+                Forms\Components\DateTimePicker::make('tanggal_perubahan')
+                    ->required(),
+                Forms\Components\Textarea::make('catatan')
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -31,7 +43,25 @@ class RiwayatStatusResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('pesanan.id')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status_sebelumnya'),
+                Tables\Columns\TextColumn::make('status_baru'),
+                Tables\Columns\TextColumn::make('tanggal_perubahan')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
