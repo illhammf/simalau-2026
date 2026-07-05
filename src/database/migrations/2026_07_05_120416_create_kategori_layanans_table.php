@@ -13,7 +13,22 @@ return new class extends Migration
     {
         Schema::create('kategori_layanans', function (Blueprint $table) {
             $table->id();
+
+            $table->string('nama_kategori');
+            $table->string('slug')->unique();
+            $table->text('deskripsi')->nullable();
+
+            $table->enum('status', ['aktif', 'nonaktif'])
+                ->default('aktif');
+
+            $table->integer('urutan')
+                ->default(0);
+
             $table->timestamps();
+
+            $table->index('nama_kategori');
+            $table->index('status');
+            $table->index('urutan');
         });
     }
 
