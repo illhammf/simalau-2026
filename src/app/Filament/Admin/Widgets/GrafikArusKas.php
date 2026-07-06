@@ -39,13 +39,11 @@ class GrafikArusKas extends ChartWidget
 
             $labels[] = $tanggal->format('d M');
 
-            $kasMasuk[] = (float) optional(
-                $dataKas->get($tanggalKey)?->firstWhere('jenis', 'masuk')
-            )->total ?? 0;
+            $masuk = $dataKas->get($tanggalKey)?->firstWhere('jenis', 'masuk');
+            $keluar = $dataKas->get($tanggalKey)?->firstWhere('jenis', 'keluar');
 
-            $kasKeluar[] = (float) optional(
-                $dataKas->get($tanggalKey)?->firstWhere('jenis', 'keluar')
-            )->total ?? 0;
+            $kasMasuk[] = $masuk ? (float) $masuk->total : 0;
+            $kasKeluar[] = $keluar ? (float) $keluar->total : 0;
         }
 
         return [
@@ -53,10 +51,14 @@ class GrafikArusKas extends ChartWidget
                 [
                     'label' => 'Kas Masuk',
                     'data' => $kasMasuk,
+                    'backgroundColor' => '#22c55e',
+                    'borderColor' => '#22c55e',
                 ],
                 [
                     'label' => 'Kas Keluar',
                     'data' => $kasKeluar,
+                    'backgroundColor' => '#ef4444',
+                    'borderColor' => '#ef4444',
                 ],
             ],
             'labels' => $labels,
