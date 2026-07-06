@@ -307,6 +307,102 @@ class PesananResource extends Resource
                     ->native(false),
             ])
             ->actions([
+                Tables\Actions\Action::make('proses_berikutnya')
+                    ->label('Proses Berikutnya')
+                    ->icon('heroicon-o-arrow-right-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Proses status pesanan?')
+                    ->modalDescription('Status pesanan akan dinaikkan ke tahap berikutnya sesuai alur laundry.')
+                    ->modalSubmitActionLabel('Ya, proses')
+                    ->visible(fn (Pesanan $record): bool => ! in_array($record->status_pesanan, [
+                        'selesai',
+                        'dibatalkan',
+                    ]))
+                    ->action(function (Pesanan $record): void {
+                        $statusSebelumnya = $record->status_pesanan;
+
+                        $statusBaru = match ($statusSebelumnya) {
+                            'menunggu_konfirmasi' => 'menunggu_proses',
+                            'menunggu_proses' => 'sedang_dicuci',
+                            'sedang_dicuci' => 'sedang_dikeringkan',
+                            'sedang_dikeringkan' => 'sedang_disetrika',
+                            'sedang_disetrika' => 'siap_diambil',
+                            'siap_diambil' => 'selesai',
+                            default => $statusSebelumnya,
+                        };
+
+                        if ($statusSebelumnya === $statusBaru) {
+                            return;
+                        }
+
+                        $dataUpdate = [
+                            'status_pesanan' => $statusBaru,
+                        ];
+
+                        if ($statusBaru === 'siap_diambil') {
+                            $dataUpdate['tanggal_siap_diambil'] = now();
+                        }
+
+                        if ($statusBaru === 'selesai') {
+                            $dataUpdate['tanggal_selesai'] = now();
+                        }
+
+                        $record->update($dataUpdate);
+
+                        \App\Models\RiwayatStatus::query()->create([
+                            'pesanan_id' => $record->id,
+                            'user_id' => auth()->id(),
+                            'status_sebelumnya' => $statusSebelumnya,
+                            'status_baru' => $statusBaru,
+                            'tanggal_perubahan' => now(),
+                            'catatan' => 'Status pesanan diproses melalui aksi cepat admin.',
+                        ]);
+
+                        if ($statusBaru === 'selesai') {
+                            \App\Models\PengingatPengambilan::query()
+                                ->where('pesanan_id', $record->id)
+                                ->update([
+                                    'status_pengingat' => 'selesai',
+                                ]);
+                        }
+                    }),
+
+                Tables\Actions\Action::make('batalkan')
+                    ->label('Batalkan')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Batalkan pesanan?')
+                    ->modalDescription('Pesanan yang dibatalkan tidak akan diproses lebih lanjut.')
+                    ->modalSubmitActionLabel('Ya, batalkan')
+                    ->visible(fn (Pesanan $record): bool => ! in_array($record->status_pesanan, [
+                        'selesai',
+                        'dibatalkan',
+                    ]))
+                    ->action(function (Pesanan $record): void {
+                        $statusSebelumnya = $record->status_pesanan;
+
+                        $record->update([
+                            'status_pesanan' => 'dibatalkan',
+                        ]);
+
+                        \App\Models\RiwayatStatus::query()->create([
+                            'pesanan_id' => $record->id,
+                            'user_id' => auth()->id(),
+                            'status_sebelumnya' => $statusSebelumnya,
+                            'status_baru' => 'dibatalkan',
+                            'tanggal_perubahan' => now(),
+                            'catatan' => 'Pesanan dibatalkan oleh admin.',
+                        ]);
+
+                        \App\Models\PengingatPengambilan::query()
+                            ->where('pesanan_id', $record->id)
+                            ->update([
+                                'status_pengingat' => 'selesai',
+                            ]);
+                    }),
+
                 Tables\Actions\EditAction::make()
                     ->label('Kelola'),
 
