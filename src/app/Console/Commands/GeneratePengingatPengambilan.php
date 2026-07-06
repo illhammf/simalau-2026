@@ -18,7 +18,7 @@ class GeneratePengingatPengambilan extends Command
             ->with('pelanggan')
             ->where('status_pesanan', 'siap_diambil')
             ->whereNotNull('tanggal_siap_diambil')
-            ->whereDate('tanggal_siap_diambil', '<=', now()->subDays(3)->toDateString())
+            ->whereRaw('DATE(tanggal_siap_diambil) <= ?', [now()->subDays(3)->toDateString()])
             ->get();
 
         $jumlahDibuat = 0;
