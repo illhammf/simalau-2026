@@ -3,17 +3,6 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-class LayananController extends Controller
-{
-    //
-}
-<?php
-
-namespace App\Http\Controllers\Front;
-
-use App\Http\Controllers\Controller;
 use App\Models\KategoriLayanan;
 use App\Models\LayananLaundry;
 use App\Models\PengaturanSistem;
